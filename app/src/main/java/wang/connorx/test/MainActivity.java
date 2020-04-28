@@ -14,6 +14,7 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private Tag tag;
     private String load;
 
+    private NfcAdapter mNfcAdapter;
+    private PendingIntent mPendingIntent;
+
     private boolean isWrite = false;
 
     private NfcAdapter nfcAdapter;
@@ -45,9 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private OnClickListener clearListener = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            textDisplay.setText("Please tap a tag to scan.");
-            textStatus.setText("No task.");
-            isWrite = false;
+            clear();
         }
     };
 
@@ -87,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
+                getClass()), 0);
 
     }
 
@@ -97,10 +102,40 @@ public class MainActivity extends AppCompatActivity {
         setIntent(intent);
         if (isWrite){
             writeTag(load);
+            textDisplay.setText("Please scan your to check the ID");
+            textDisplay.setTextColor(Color.BLACK);
         }
-        readTag();
+        else{
+            readTag();
+        }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mNfcAdapter != null)
+            mNfcAdapter.enableForegroundDispatch(this, mPendingIntent, null,
+                    null);
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (mNfcAdapter != null)
+            mNfcAdapter.disableForegroundDispatch(this);
+    }
+
+    public void clear() {
+        textDisplay.setText("Please tap a tag to scan.");
+        textStatus.setText("No task.");
+        isWrite = false;
+        if (writeSwitch.isChecked()){
+            writeSwitch.toggle();
+        }
+    }
 
     public void readTag() {
         NdefMessage msg = null;
@@ -124,11 +159,16 @@ public class MainActivity extends AppCompatActivity {
                 } // for
             } // if
         } // if
+        else if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(getIntent().getAction())){
+            textDisplay.setText("It is a new Tag, please give it an ID");
+            textDisplay.setTextColor(Color.BLACK);
+        }
     }
 
 
 
     public void writeTag(String load){
+        textStatus.setText("Ready to write");
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())){
             tag = (Tag)getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
             if (tag != null){
@@ -143,13 +183,38 @@ public class MainActivity extends AppCompatActivity {
                     isWrite = false;
                 } catch (Exception e){
                     e.printStackTrace();
-                    textStatus.setText("An error occurred, please try again!");
+                    textStatus.setText("Message cannot be sent, please try again!");
                 } finally{
                     try {
                         ndef.close();
                     } catch (Exception e){
                         e.printStackTrace();
-                        textStatus.setText("An error occurred, please try again!");
+                        textStatus.setText("Connection cannot be closed, please try again!");
+                    }
+                }
+            }
+        }
+        else if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(getIntent().getAction())){
+            tag = (Tag)getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            if (tag != null){
+                NdefFormatable format = NdefFormatable.get(tag);
+                try {
+                    format.connect();
+                    NdefRecord rtdUriRecord1 = NdefRecord.createUri(load);
+                    NdefMessage ndefMessage = new NdefMessage(rtdUriRecord1);
+                    format.format(ndefMessage);
+                    writeSwitch.toggle();
+                    textStatus.setText("Done!");
+                    isWrite = false;
+                } catch (Exception e){
+                    e.printStackTrace();
+                    textStatus.setText("Message cannot be sent, please try again!");
+                } finally{
+                    try {
+                        format.close();
+                    } catch (Exception e){
+                        e.printStackTrace();
+                        textStatus.setText("Connection cannot be closed, please try again!");
                     }
                 }
             }
