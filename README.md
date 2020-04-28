@@ -1,10 +1,4 @@
----
-title: NFC Module Testing Record
-date: 2020-04-27 01:43:22
-tags: nfc
-password: cnr
-message: Please enter your password to access this project log
----
+#NFC Module Testing Record
 
 ## Background
 
@@ -56,35 +50,35 @@ In the AndroidManifest.xml, claims regarding the usage of NFC and intents should
 
 3. Avoid popping many windows
 
-  As Android has four types of activity launch mode, to avoid popping new windows for new intent, we declare the launch mode to be singleTask.
+   As Android has four types of activity launch mode, to avoid popping new windows for new intent, we declare the launch mode to be singleTask.
 
-  ```xml
-  <activity android:name=".MainActivity" android:launchMode="singleTask" >
-  ```
+   ```xml
+   <activity android:name=".MainActivity" android:launchMode="singleTask" >
+   ```
 
 4. Identify new tags
 
-  New tags are without the specific URL scheme, hence they cannot be caught by this application. The unsolved NDEF message should also be processed by our application, i.e. our application should appear in the Activity Chooser for unsolved NDEF message. Intent filter for nfc.action.TECH_DISCOVERED is added.
+   New tags are without the specific URL scheme, hence they cannot be caught by this application. The unsolved NDEF message should also be processed by our application, i.e. our application should appear in the Activity Chooser for unsolved NDEF message. Intent filter for nfc.action.TECH_DISCOVERED is added.
 
-  ```xml
-  <intent-filter>
-      <action android:name="android.nfc.action.TECH_DISCOVERED" />
-      </intent-filter>
-      <meta-data android:name="android.nfc.action.TECH_DISCOVERED"
-          android:resource="@xml/nfc_filter" />
-  ```
+   ```xml
+   <intent-filter>
+       <action android:name="android.nfc.action.TECH_DISCOVERED" />
+       </intent-filter>
+       <meta-data android:name="android.nfc.action.TECH_DISCOVERED"
+           android:resource="@xml/nfc_filter" />
+   ```
 
-  With the meta-data file (nfc_filter.xml) saved in the directory of ./res/xml to specify the types of nfc technology that should be caught.
+   With the meta-data file (nfc_filter.xml) saved in the directory of ./res/xml to specify the types of nfc technology that should be caught.
 
-  ```xml
-  <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" >  
-    <tech-list>   <tech>android.nfc.tech.NfcA</tech>  </tech-list>  
-    <tech-list>   <tech>android.nfc.tech.NfcB</tech>  </tech-list>  
-    <tech-list>   <tech>android.nfc.tech.NfcF</tech>  </tech-list>  
-    <tech-list>   <tech>android.nfc.tech.NfcV</tech>  </tech-list>  
-    <tech-list>   <tech>android.nfc.tech.NfcBarcode</tech>  </tech-list>
-  </resources>
-  ```
+   ```xml
+   <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" >
+     <tech-list>   <tech>android.nfc.tech.NfcA</tech>  </tech-list>
+     <tech-list>   <tech>android.nfc.tech.NfcB</tech>  </tech-list>
+     <tech-list>   <tech>android.nfc.tech.NfcF</tech>  </tech-list>
+     <tech-list>   <tech>android.nfc.tech.NfcV</tech>  </tech-list>
+     <tech-list>   <tech>android.nfc.tech.NfcBarcode</tech>  </tech-list>
+   </resources>
+   ```
 
 ### activity_main.xml - layout of the page
 
