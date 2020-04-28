@@ -1,0 +1,2 @@
+rootProject.name='NFC RW'
+include ':app'
