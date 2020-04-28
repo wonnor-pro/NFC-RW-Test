@@ -93,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
         mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this,
                 getClass()), 0);
 
+        readTag();
+
     }
 
 
