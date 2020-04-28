@@ -31,9 +31,9 @@ In the AndroidManifest.xml, claims regarding the usage of NFC and intents should
 
 1. Require the usage of NFC
 
-```xml
-<uses-permission android:name="android.permission.NFC" />
-```
+   ```xml
+   <uses-permission android:name="android.permission.NFC" />
+   ```
 
 2. Catch specific format of records so that no other activity will be called
 
@@ -83,8 +83,10 @@ In the AndroidManifest.xml, claims regarding the usage of NFC and intents should
 ### activity_main.xml - layout of the page
 
 <div align=center>
-  <img width=300 src="https://lh6.googleusercontent.com/k38FdYiLyTMpzRknIQcmX4HnyZbqTkSiPk1WFqcQQaBTNJmKor4RSwCwnQ1eiCxt4UPY2d421Mp9r0tIY-zLAChzZL4WBxBN0gC_NytD2SSdMnnIKTp8XIXiiKh4Uf87m9aFpBQ3" >
+  <img width=300 src="https://tech.connorx.wang/images/nfc/screenshot_01.png" >
+  <img width=300 src="https://tech.connorx.wang/images/nfc/screenshot_02.png" >
 </div>
+
 
 The interactive features includes:
 
@@ -115,22 +117,52 @@ The read and write operations are performed by functions of `readTag()` and `wri
 The `readTag()`function should be able to read the NDEF message from the tag and update the TagID. Key points are as followed (no structures, omit many lines in between):
 
 ```java
+import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
+
+// For registered tags (triggered by NDEF_DISCOVERED)
+if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())){
+    tag = (Tag) getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+} 
+// For unknown tags (triggered by TAG_DISCOVERED)
+else if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(getIntent().getAction())){
+    textDisplay.setText("It is a new Tag, please give it an ID");
+}
+
 // get the tag object from the intent
 tag = (Tag) getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
 // get the message from from the NDEF
-Ndef ndef = Ndef.get(tag);msg = ndef.getCachedNdefMessage();
+Ndef ndef = Ndef.get(tag);
+msg = ndef.getCachedNdefMessage();
 
 // extract the TagID from the URL (from the character index 14 to the end)
 String payload = new String(record.getPayload());
 String actualData = payload.substring(14);
 ```
 
-The `writeTag(String load)` function should be able to write the URL formatted in variable load to the NFC tag. Key points are as followed (no structures, omit many lines in between):
+The `writeTag(String load)` function should be able to write the URL formatted in variable load to the NFC tag. Depending on the tag's format, the writing process is different. Key points are as followed (no structures, omit many lines in between):
 
 ```java
-// build the connection
-ndef.connect();
+import android.nfc.tech.Ndef;
+import android.nfc.tech.NdefFormatable;
+
+// For registered tags (triggered by NDEF_DISCOVERED)
+if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(getIntent().getAction())){
+    tag = (Tag) getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+    
+    // With NDEF already
+    Ndef ndef = Ndef.get(tag);
+    ndef.connect();
+} 
+// For unknown tags (triggered by TAG_DISCOVERED)
+else if(NfcAdapter.ACTION_TAG_DISCOVERED.equals(getIntent().getAction())){
+    tag = (Tag) getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+    
+    // Without NDEF format
+    NdefFormatable format = NdefFormatable.get(tag);
+    format.connect();
+}
 
 // generate the RTD_URL (type: TNF_WELL_KNOWN) 
 recordNdefRecord rtdUriRecord1 = NdefRecord.createUri(load);
@@ -138,6 +170,7 @@ recordNdefRecord rtdUriRecord1 = NdefRecord.createUri(load);
 // write the record to the deviceNdefMessage 
 ndefMessage = new NdefMessage(rtdUriRecord1);
 ndef.writeNdefMessage(ndefMessage);
+// or format.format(ndefMessage)
 ```
 
 The main structure/logic of the application operation, however, is adjusted during the development. Some problems occurred are put down below with solutions:
@@ -157,6 +190,44 @@ The main structure/logic of the application operation, however, is adjusted duri
 3. Write the ID to the unregistered tag (empty tags)
 
    In the testing devices, there are more than one Android application available for the unsolved NDEF message, hence the `Activity Chooser` will pop out and interpret the writing. We attempt to use the ForegroundDispatch.
+   
+   ```java
+   // Define NFC adapter and Pending intent to catch the intents
+   private NfcAdapter mNfcAdapter;
+   private PendingIntent mPendingIntent;
+   
+   public void onCreate(Bundle savedInstanceState) {
+       ...
+       nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+       ...
+       mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+       mPendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()), 0);
+   }
+   
+   public void onNewIntent(Intent intent){
+       super.onNewIntent(intent);
+       setIntent(intent);
+       ... // Operations here
+   }
+   
+   public void onResume() {
+       super.onResume();
+     
+       // Enable Foreground Dispatch
+       if (mNfcAdapter != null)
+           mNfcAdapter.enableForegroundDispatch(this, mPendingIntent, null, null);
+   }
+   
+   public void onPause() {
+       super.onPause();
+     
+       // Disable Foreground Dispatch
+       if (mNfcAdapter != null)
+           mNfcAdapter.disableForegroundDispatch(this);
+   } 
+   ```
+   
+   
 
 ### Integrated Module
 
