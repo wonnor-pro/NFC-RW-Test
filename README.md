@@ -191,7 +191,7 @@ The main structure/logic of the application operation, however, is adjusted duri
 
 3. Write the ID to the unregistered tag (empty tags)
 
-   In the testing devices, there are more than one Android application available for the unsolved NDEF message, hence the `Activity Chooser` will pop out and interpret the writing. We attempt to use the ForegroundDispatch.
+   In the testing devices, there are more than one Android application available for the unsolved NDEF message, hence the `Activity Chooser` will pop out and interrupt the writing. We attempt to use the ForegroundDispatch.
    
    ```java
    // Define NFC adapter and Pending intent to catch the intents
