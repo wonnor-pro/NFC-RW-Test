@@ -2,7 +2,7 @@
 
 ## Background
 
-Android devices with NFC activated are able to constantly search for available NFC devices when the screen is unlocked. As long as an available NFC device is found, it will parse the NDEF record stored on that device and according to its intent to select the appropriate application to handle the intent.
+Android devices with NFC activated are able to constantly search for available NFC devices when the screen is unlocked. As long as an available NFC device is found, it will parse the NDEF record stored on that device and according to its intent select an appropriate application to handle the intent.
 
 NDEF data is encapsulated inside a message (NdefMessage) that contains one or more records (NdefRecord). In a well-formed NDEF message, the first NdefRecord contains the following fields:
 
@@ -11,7 +11,7 @@ NDEF data is encapsulated inside a message (NdefMessage) that contains one or mo
 3.  TypeVariable Length ID
 4. Variable Length Payload
 
-The objectives for NFC module required in this Android application is to perform the following tasks:
+The objective for the NFC module required in this Android application is to perform the following tasks:
 
 1. Initialise a new tag and assign a TagID to it;
 2. Read the TagID from registered NFC tag;
@@ -19,9 +19,11 @@ The objectives for NFC module required in this Android application is to perform
 
 More specifically, the message read from the NFC module should be in a format/intent that is able to trigger our application without popping out the Activity Chooser.
 
+<!-- more -->
+
 ## Test Application
 
-To design the NFC module, a NFC testing Android application is built. This application takes the simplest layout with few interactive features to simulate functions required. Basic operations include reading and writing the tags.
+To design the NFC module, a NFC testing Android application is built. This application takes the simplest layout with a few interactive features to simulate functions required. Basic operations include reading and writing the tags.
 
 Here several key points and problems encountered (with solutions) are listed for information.
 
